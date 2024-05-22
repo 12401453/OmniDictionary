@@ -38,34 +38,10 @@ namespace OmniDictionary
         List<string> _allowable_dicts = ["dict.cc", "PONS.com", "Wiktionary"];
 
         List<string> language_names = new();
-
-        /*public int LangId
-        {
-            get => _lang_id;
-            set
-            {
-                if (languages.ContainsKey(value))
-                {
-                    _lang_id = value;
-                    _name = languages[value];
-
-                    _allowable_dicts = new List<string>();
-                    foreach (int allowable_dict_index in allowable_dict_list[_lang_id])
-                    {
-                        _allowable_dicts.Add(dict_names[allowable_dict_index]);
-                    }
-                }
-                else return;
-            }
-        } */
         public string Name
         {
             get => _name;
         }
-        /*public List<string> AllowableDicts
-        {
-            get => _allowable_dicts;
-        } */
 
         public List<string> LanguageNames
         {
@@ -73,15 +49,6 @@ namespace OmniDictionary
         }
 
         static List<Language> _langs = new List<Language>() {
-            /*new Language(1, "Russian", ["Wiktionary", "PONS.com"], ["enwiktionary_grey.png", "pons.png"]),
-            new Language(2, "Kazakh", ["sozdik.kz", "Wiktionary"], ["sozdik.png", "enwiktionary_grey.png"]),
-            new Language(3, "Bulgarian", ["PONS.com", "Wiktionary"], ["pons.png", "enwiktionary_grey.png"]),
-            new Language(4, "Polish", ["PONS.com", "Wiktionary"], ["pons.png", "enwiktionary_grey.png"]),
-            new Language(5, "German", ["dict.cc", "PONS.com", "Wiktionary"], ["dictcc.png", "pons.png", "enwiktionary_grey.png"]),
-            new Language(6, "Swedish", ["PONS.com", "Wiktionary"], ["pons.png", "enwiktionary_grey.png"]),
-            new Language(7, "Turkish", ["PONS.com", "Wiktionary"], ["pons.png", "enwiktionary_grey.png"]),
-            new Language(8, "Danish", ["PONS.com", "Wiktionary"], ["pons.png", "enwiktionary_grey.png"]),
-            new Language(10, "Old English", ["Mitchell&Robinson Glossary", "Wiktionary"], ["mr_glossary.jpg", "enwiktionary_grey.png"]) */
             new Language(1, "Russian", ["Wiktionary", "PONS.com"], ["enwiktionary_grey.png", "pons.png"]),
             new Language(2, "Kazakh", ["sozdik.kz", "Wiktionary"], ["sozdik.png", "enwiktionary_grey.png"]),    
             new Language(3, "Polish", ["PONS.com", "Wiktionary"], ["pons.png", "enwiktionary_grey.png"]),
@@ -152,7 +119,7 @@ namespace OmniDictionary
             }
         }
 
-        List<DictResult> dict_results = new List<DictResult>() { new DictResult(false, true, "<b>прицѐлвам се , прицѐля се</b> perf VERB intr", ""), new DictResult(true, false, "прицелвам се", "zielen"), new DictResult(false, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(true, false, "прицелвам се", "zielen"), new DictResult(false, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(true, false, "прицелвам се", "zielen"), new DictResult(false, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(true, false, "прицелвам се", "zielen"), new DictResult(false, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(true, false, "прицелвам се", "zielen"), new DictResult(false, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(true, false, "прицелвам се", "zielen"), new DictResult(false, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(true, false, "прицелвам се", "zielen"), new DictResult(false, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(true, false, "прицелвам се", "zielen"), new DictResult(true, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(false, false, "прицелвам се", "zielen"), new DictResult(true, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(false, false, "прицелвам се", "zielen"), new DictResult(true, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(false, false, "прицелвам се", "zielen"), new DictResult(false, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(true, false, "прицелвам се", "zielen"), new DictResult(false, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(true, false, "прицелвам се", "zielen"), new DictResult(false, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(true, false, "прицелвам се", "zielen"), new DictResult(false, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen")};
+        List<DictResult> dict_results = new List<DictResult>() /*{ new DictResult(false, true, "<b>прицѐлвам се , прицѐля се</b> perf VERB intr", ""), new DictResult(true, false, "прицелвам се", "zielen"), new DictResult(false, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(true, false, "прицелвам се", "zielen"), new DictResult(false, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(true, false, "прицелвам се", "zielen"), new DictResult(false, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(true, false, "прицелвам се", "zielen"), new DictResult(false, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(true, false, "прицелвам се", "zielen"), new DictResult(false, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(true, false, "прицелвам се", "zielen"), new DictResult(false, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(true, false, "прицелвам се", "zielen"), new DictResult(false, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(true, false, "прицелвам се", "zielen"), new DictResult(true, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(false, false, "прицелвам се", "zielen"), new DictResult(true, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(false, false, "прицелвам се", "zielen"), new DictResult(true, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(false, false, "прицелвам се", "zielen"), new DictResult(false, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(true, false, "прицелвам се", "zielen"), new DictResult(false, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(true, false, "прицелвам се", "zielen"), new DictResult(false, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(true, false, "прицелвам се", "zielen"), new DictResult(false, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen")} */;
         public List<DictResult> Results
         { 
             get => dict_results; 
@@ -168,12 +135,7 @@ namespace OmniDictionary
         private async Task FetchDictResultsAsync(string dict_query)
         {
             dictScraper.UrlMaker(SelectedLanguage.LangId, allowable_dict_list[SelectedLanguage.LangId][SelectedDictIndex], dict_query);
-            //dictScraper.DictBaseURL = "https://de.pons.com/%C3%BCbersetzung/d%C3%A4nisch-deutsch/" + Uri.EscapeDataString(dict_query);
-            //dictScraper.DictBaseURL = "https://de.pons.com/%C3%BCbersetzung/polnisch-deutsch/" + Uri.EscapeDataString(dict_query);
             Results = new List<DictResult>() { new DictResult(false, false, "Performing query...", "")};
-
-            //List<DictResult> dict_results = await dictScraper.GetDictResultsAsync();
-            //Results = new List<DictResult>() { new DictResult(false, true, "Request to Kortyboy complete", ""), new DictResult(true, false, dict_query, "zielen") };
             Results = await dictScraper.GetDictResultsAsync();
         }
 

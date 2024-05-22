@@ -198,15 +198,15 @@ namespace OmniDictionary
                     if(node.NodeType == HtmlNodeType.Element && node.Name == "span" && !node.MatchesAnyClass(["headword_attributes", "headword", "headword_spelling"]))
                     {
                         text += "<i>" + node.InnerText + "</i>";
-                        header_span_aux.Text = HttpUtility.HtmlDecode(node.InnerText.NormaliseWhitespace());
+                        header_span_aux.Text = node.InnerText.NormaliseWhitespace().HtmlDecode();
                         //formatted_text.Spans.Add(header_span_aux);
-                        formatted_text.Spans.Add(new Span { Text = HttpUtility.HtmlDecode(node.InnerText.NormaliseWhitespace()), FontFamily = "IBMPlexSans", TextColor = Color.FromRgba("#cbd9f4"), FontSize = 14 });
+                        formatted_text.Spans.Add(new Span { Text = node.InnerText.NormaliseWhitespace().HtmlDecode(), FontFamily = "IBMPlexSans", TextColor = Color.FromRgba("#cbd9f4"), FontSize = 14 });
                     }
                     else if(node.NodeType == HtmlNodeType.Element && node.Name == "span" && node.HasClass("headword_attributes"))
                     {
                         text += node.InnerText; //this block is to get the title= attribute to show HTML title tooltip for certain headwords, but I doubt it will work in MAUI and it is doubtful to be worth implementing a proper tooltip for it so really this whole block is unneccessary
-                        header_span_main.Text = node.InnerText.NormaliseWhitespace();
-                        formatted_text.Spans.Add(header_span_main);
+                        //header_span_main.Text = node.InnerText.NormaliseWhitespace();
+                        formatted_text.Spans.Add(new Span { Text = node.InnerText.NormaliseWhitespace().HtmlDecode(), FontFamily = "IBMPlexSans", TextColor = Color.FromRgba("#cbd9f4"), FontAttributes = FontAttributes.Bold, FontSize = 16 });
                     }
                     else if(node.HasClass("headword"))
                     {
@@ -220,16 +220,16 @@ namespace OmniDictionary
                                 break;
                             }
                         }
-                        header_span_main.Text = headword_text.NormaliseWhitespace();
+                        header_span_main.Text = headword_text.NormaliseWhitespace().HtmlDecode();
                         //formatted_text.Spans.Add(header_span_main);
-                        formatted_text.Spans.Add(new Span { Text = headword_text.NormaliseWhitespace(), FontFamily = "IBMPlexSans", TextColor = Color.FromRgba("#cbd9f4"), FontAttributes = FontAttributes.Bold, FontSize = 16 });
+                        formatted_text.Spans.Add(new Span { Text = headword_text.NormaliseWhitespace().HtmlDecode(), FontFamily = "IBMPlexSans", TextColor = Color.FromRgba("#cbd9f4"), FontAttributes = FontAttributes.Bold, FontSize = 16 });
                     }
                     else if(node.NodeType == HtmlNodeType.Text)
                     {
                         text += node.InnerText;
-                        header_span_main.Text = node.InnerText.NormaliseWhitespace();
+                        header_span_main.Text = node.InnerText.NormaliseWhitespace().HtmlDecode();
                         //formatted_text.Spans.Add(header_span_main);
-                        formatted_text.Spans.Add(new Span { Text = node.InnerText.NormaliseWhitespace(), FontFamily = "IBMPlexSans", TextColor = Color.FromRgba("#cbd9f4"), FontAttributes = FontAttributes.Bold, FontSize = 16 });
+                        formatted_text.Spans.Add(new Span { Text = node.InnerText.NormaliseWhitespace().HtmlDecode(), FontFamily = "IBMPlexSans", TextColor = Color.FromRgba("#cbd9f4"), FontAttributes = FontAttributes.Bold, FontSize = 16 });
                     }
                 }
 
@@ -244,7 +244,7 @@ namespace OmniDictionary
                 //if (node_list.Count < 2) return ""; //sometimes the <h3> nodes can be just plain text so get skipped, but in these cases nothing interesting is said anyway
                 if (node_list.Count < 2) {
                     //return node_list[0].InnerText.Trim().NormaliseWhitespace();
-                    formatted_text.Spans.Add(new Span { Text = node_list[0].InnerText.Trim().NormaliseWhitespace(), FontFamily = "IBMPlexSans", TextColor = Color.FromRgba("#cbd9f4"), FontSize = 14 });
+                    formatted_text.Spans.Add(new Span { Text = node_list[0].InnerText.Trim().NormaliseWhitespace().HtmlDecode(), FontFamily = "IBMPlexSans", TextColor = Color.FromRgba("#cbd9f4"), FontSize = 14 });
                     return formatted_text;
                 }
                 string text = "";
@@ -253,12 +253,12 @@ namespace OmniDictionary
                     if(node.MatchesAnyClass(["info", "style"]))
                     {
                         text += "<abbr>" + node.InnerText.Trim() + "</abbr> "; //convert to FormattedString and make the text greyer to match the website
-                        formatted_text.Spans.Add(new Span { Text = node.InnerText.Trim().NormaliseWhitespace(), FontFamily = "IBMPlexSans", TextColor = Color.FromRgba("#cbd9f4be"), FontSize = 14, FontAttributes = FontAttributes.Italic });
+                        formatted_text.Spans.Add(new Span { Text = node.InnerText.Trim().NormaliseWhitespace().HtmlDecode(), FontFamily = "IBMPlexSans", TextColor = Color.FromRgba("#cbd9f4be"), FontSize = 14, FontAttributes = FontAttributes.Italic });
                     }
                     else
                     {
                         text += node.InnerText.Trim() + " ";
-                        formatted_text.Spans.Add(new Span { Text = HttpUtility.HtmlDecode(node.InnerText.Trim().NormaliseWhitespace()) + " ", FontFamily = "IBMPlexSans", TextColor = Color.FromRgba("#cbd9f4"), FontSize = 14 });
+                        formatted_text.Spans.Add(new Span { Text = node.InnerText.Trim().NormaliseWhitespace().HtmlDecode() + " ", FontFamily = "IBMPlexSans", TextColor = Color.FromRgba("#cbd9f4"), FontSize = 14 });
                     }
                 }
                 //return text;
