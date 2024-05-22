@@ -1,0 +1,128 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="OmniDictionary.MainPage"
+             xmlns:viewmodels="clr-namespace:OmniDictionary"
+             x:DataType="viewmodels:DictViewModel"
+             Title="">
+    <ContentPage.BindingContext>
+        <viewmodels:DictViewModel/>
+    </ContentPage.BindingContext>
+
+    <ContentPage.Resources>
+        <DataTemplate x:Key="dictHeaderTemplate" x:DataType="viewmodels:DictResult">
+            <Grid Padding="0, 0">
+                <Frame Style="{AppThemeBinding Light={StaticResource dictResultHeaderFrame}, Dark={StaticResource dictResultHeaderFrame}}">
+                    <Label Text="{Binding Column1}" Style="{AppThemeBinding Light={StaticResource dictResultHeaderLabel}, Dark={StaticResource dictResultHeaderLabel}}"/>
+                </Frame>
+            </Grid>
+        </DataTemplate>
+        <DataTemplate x:Key="dictHeaderFormattedStringTemplate" x:DataType="viewmodels:DictResult">
+            <Grid Padding="0, 0">
+                <Frame Style="{AppThemeBinding Light={StaticResource dictResultHeaderFrame}, Dark={StaticResource dictResultHeaderFrame}}">
+                    <Label FormattedText="{Binding Header_Text}" Style="{AppThemeBinding Light={StaticResource dictResultHeaderFormattedStringLabel}, Dark={StaticResource dictResultHeaderFormattedStringLabel}}"/>
+                </Frame>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="dictResultSingleOddTemplate" x:DataType="viewmodels:DictResult">
+            <Grid Padding="0, 0">
+                <Frame Style="{AppThemeBinding Light={StaticResource dictResultOddFrame}, Dark={StaticResource dictResultOddFrame}}">
+                    <Label Text="{Binding Column1}" Style="{AppThemeBinding Light={StaticResource dictResultSingleLabel}, Dark={StaticResource dictResultSingleLabel}}"/>
+                </Frame>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="dictResultDoubleOddTemplate" x:DataType="viewmodels:DictResult">
+            <Grid Padding="0, 0" ColumnDefinitions="0.5*, 0.5*">
+                <Frame Grid.Column="0" Style="{AppThemeBinding Light={StaticResource dictResultOddFrame}, Dark={StaticResource dictResultOddFrame}}">
+                    <Label Text="{Binding Column1}" Style="{AppThemeBinding Light={StaticResource dictResultDoubleLabel}, Dark={StaticResource dictResultDoubleLabel}}"/>
+                </Frame>
+                <Frame Grid.Column="1" Style="{AppThemeBinding Light={StaticResource dictResultOddFrame}, Dark={StaticResource dictResultOddFrame}}">
+                    <Label Text="{Binding Column2}" Style="{AppThemeBinding Light={StaticResource dictResultDoubleLabel}, Dark={StaticResource dictResultDoubleLabel}}"/>
+                </Frame>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="dictResultSingleEvenTemplate" x:DataType="viewmodels:DictResult">
+            <Grid Padding="0, 0">
+                <Frame Style="{AppThemeBinding Light={StaticResource dictResultEvenFrame}, Dark={StaticResource dictResultEvenFrame}}">
+                    <Label Text="{Binding Column1}" Style="{AppThemeBinding Light={StaticResource dictResultSingleLabel}, Dark={StaticResource dictResultSingleLabel}}"/>
+                </Frame>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="dictResultDoubleEvenTemplate" x:DataType="viewmodels:DictResult">
+            <Grid Padding="0, 0" ColumnDefinitions="0.5*, 0.5*">
+                <Frame Grid.Column="0" Style="{AppThemeBinding Light={StaticResource dictResultEvenFrame}, Dark={StaticResource dictResultEvenFrame}}">
+                    <Label Text="{Binding Column1}" Style="{AppThemeBinding Light={StaticResource dictResultDoubleLabel}, Dark={StaticResource dictResultDoubleLabel}}"/>
+                </Frame>
+                <Frame Grid.Column="1" Style="{AppThemeBinding Light={StaticResource dictResultEvenFrame}, Dark={StaticResource dictResultEvenFrame}}">
+                    <Label Text="{Binding Column2}" Style="{AppThemeBinding Light={StaticResource dictResultDoubleLabel}, Dark={StaticResource dictResultDoubleLabel}}"/>
+                </Frame>
+            </Grid>
+        </DataTemplate>
+
+
+
+        <viewmodels:DictTemplateSelector x:Key="dictTemplateSelector"
+                                          DictHeaderTemplate="{StaticResource dictHeaderTemplate}"
+                                          DictResultDoubleOddTemplate="{StaticResource dictResultDoubleOddTemplate}" 
+                                         DictResultSingleOddTemplate="{StaticResource dictResultSingleOddTemplate}"
+                                          DictResultDoubleEvenTemplate="{StaticResource dictResultDoubleEvenTemplate}"
+                                         DictResultSingleEvenTemplate="{StaticResource dictResultSingleEvenTemplate}"
+                                         DictHeaderFormattedStringTemplate="{StaticResource dictHeaderFormattedStringTemplate}"/>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="60, 60, *"
+          ColumnDefinitions="0.3*, 0.3*, 80"
+          Padding="10"
+          RowSpacing="10"
+          ColumnSpacing="10"
+          Margin="0,30,0,0">
+
+        <Picker x:Name="langPicker" Grid.Row="0" Grid.Column="0"
+                Style="{AppThemeBinding Light={StaticResource pickers}, Dark={StaticResource pickers}}"
+                ItemsSource="{Binding Langs}"
+                ItemDisplayBinding="{Binding Name}"
+                SelectedItem="{Binding SelectedLanguage}"
+                SelectedIndex="{Binding SelectedLangIndex}">
+        </Picker>
+        <Picker x:Name="dictPicker" Grid.Row="0" Grid.Column="1"
+                Style="{AppThemeBinding Light={StaticResource pickers}, Dark={StaticResource pickers}}"
+                ItemsSource="{Binding SelectedLanguage.AllowableDicts}"
+                SelectedIndex="{Binding SelectedDictIndex}"
+                SelectedItem="{Binding SelectedDict}">
+
+        </Picker>
+        
+        <Image  BackgroundColor="Transparent" Grid.Row="0" Grid.Column="2"
+            Source="{Binding SelectedLogo}"/>
+      
+
+        <Border x:Name="searchBoxBorder" Grid.Row="1" Grid.ColumnSpan="3" Style="{AppThemeBinding Light={StaticResource dictSearchbarBorder}, Dark={StaticResource dictSearchbarBorder}}">
+            <SearchBar x:Name="searchBox"  Style="{AppThemeBinding Light={StaticResource dictSearchbar}, Dark={StaticResource dictSearchbar}}"
+                   IsTextPredictionEnabled="False"
+                   IsSpellCheckEnabled="False"
+                   SearchCommand="{Binding PerformSearch}"
+                   SearchCommandParameter="{Binding Text, Source={x:Reference searchBox}}"/>
+        </Border>
+
+    
+
+        <Border Grid.Row="2" Grid.ColumnSpan="3" Stroke="Black" StrokeShape="RoundRectangle 7" StrokeThickness="2">
+        <CollectionView 
+                        ItemTemplate="{StaticResource dictTemplateSelector}"
+                        ItemsSource="{Binding Results}"
+                        VerticalScrollBarVisibility="Default">
+            
+            
+            
+            
+            
+        </CollectionView>
+        </Border>
+
+    </Grid>
+
+</ContentPage>
