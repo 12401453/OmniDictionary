@@ -68,6 +68,9 @@ namespace OmniDictionary
             set 
             {
                 _selected_lang = _langs[_selected_lang_index];
+                dictScraper.LangName = SelectedLanguage.Name;
+                dictScraper.LangId = SelectedLanguage.LangId;
+                
                 OnPropertyChanged(nameof(SelectedLanguage));
             } 
         }
@@ -103,6 +106,7 @@ namespace OmniDictionary
             set 
             {
                 _selected_dict = SelectedLanguage.AllowableDicts[SelectedDictIndex];
+                dictScraper.DictIndex = allowable_dict_list[SelectedLanguage.LangId][SelectedDictIndex];
                 SelectedLogo = SelectedLanguage.LogoURLs[SelectedDictIndex];
                 OnPropertyChanged(nameof(SelectedDict));
             }
@@ -134,7 +138,7 @@ namespace OmniDictionary
 
         private async Task FetchDictResultsAsync(string dict_query)
         {
-            dictScraper.UrlMaker(SelectedLanguage.LangId, allowable_dict_list[SelectedLanguage.LangId][SelectedDictIndex], dict_query);
+            dictScraper.UrlMaker(/*SelectedLanguage.LangId, */ /*allowable_dict_list[SelectedLanguage.LangId][SelectedDictIndex],*/ dict_query);
             Results = new List<DictResult>() { new DictResult(false, false, "Performing query...", "")};
             Results = await dictScraper.GetDictResultsAsync();
         }

@@ -1,6 +1,5 @@
 ﻿using HtmlAgilityPack;
 using System.Net;
-using System.Web;
 
 namespace OmniDictionary
 {
@@ -11,7 +10,10 @@ namespace OmniDictionary
 
         private string html = "";
         private string url = "";
-        private int dict_index = 3;
+        //private int dict_index = 3;
+        public string LangName { get; set; } = "German";
+        public int LangId { get; set; } = 5;
+        public int DictIndex { get; set; } = 3;
 
 
         //for some reason setting the .Text property of these pre-built Spans and adding them to the FormattedString messes up in a completely inscrutable way; creating the spans on the fly must be inefficient as hell but no other way seems to work properly
@@ -25,13 +27,17 @@ namespace OmniDictionary
 
         private async Task<string> GetHTMLAsync()
         {
-            return await httpClient.GetStringAsync(url);
+            try { return await httpClient.GetStringAsync(url); }
+            catch (HttpRequestException)
+            {
+                return "404 not found";
+            }
 
         }
 
-        private void NoResultsFound()
+        private void NoResultsFound(string msg="No results found")
         {
-            dict_results.Add(new DictResult(true, false, "No results found", ""));
+            dict_results.Add(new DictResult(true, false, msg, ""));
         }
         private void ScraperUnavailable()
         {
@@ -161,34 +167,6 @@ namespace OmniDictionary
                 return text.Trim().NormaliseWhitespace();
             }
 
-            /*string extractHeaderText(HtmlNodeCollection node_list)
-            {
-                string text = "";
-                bool strong_inserted = false;
-                foreach(HtmlNode node in node_list)
-                {
-                    if(node.NodeType == HtmlNodeType.Element && !node.HasClass("headword_attributes") && !strong_inserted && !node.HasClass("separator"))
-                    {
-                        text += "<strong>";
-                        strong_inserted = true;
-                    }
-                    else if(node.HasClass("separator"))
-                    {
-                        text = text.Substring(0, text.Length - 1);
-                        text += node.InnerText.Trim();
-                    }
-                    else if(node.NodeType == HtmlNodeType.Text)
-                    {
-                        text += node.InnerText.Trim() + " ";
-                    }
-                    else
-                    {
-                        text += node.InnerText.Trim() + " ";
-                    }
-                }
-                text += "</strong>";
-                return text;
-            }*/
             FormattedString extractHeaderText(HtmlNodeCollection node_list)
             {
                 FormattedString formatted_text = new FormattedString();
@@ -217,7 +195,7 @@ namespace OmniDictionary
                             {
                                 text += child_node.InnerText;
                                 headword_text += child_node.InnerText;
-                                break;
+                                //break;
                             }
                         }
                         header_span_main.Text = headword_text.NormaliseWhitespace().HtmlDecode();
@@ -359,16 +337,117 @@ namespace OmniDictionary
 
         }
 
+        //this Wiktionary-scraper is dogshit but a decent one would require an extremely complicated layout because the structure of Wiktionary entries is hugely variable
+        private void ParseWiktionary()
+        {
+            Dictionary<string, List<string>> wiki_results = new();
+            string wiki_langName = String.Join("_", LangName.Split(" "));
+            var doc = new HtmlDocument();
+            doc.LoadHtml(html);
+            var wiki_page = doc.DocumentNode;
+
+            if(wiki_page.SelectSingleNode("//*[@id=\'"+wiki_langName+"\']") == null)
+            {
+                NoResultsFound("No " + LangName + " definitions found");
+                return;
+            }
+            else
+            {
+                string pos = "";
+                bool langFlag = true;
+                HtmlNode? element = wiki_page.SelectSingleNode("//*[@id=\'" + wiki_langName + "\']").ParentNode.NextElementSibling();
+
+                int[] pos_counters =  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+                int pos_index = 0;
+
+                while(element != null && langFlag) 
+                {
+                    if (element.Name != "h2")
+                    {
+                        if (element.Name == "h4" || element.Name == "h3")
+                        {
+                            pos = element.SelectSingleNode(".//*[@class=\'mw-headline\']").InnerText;
+                            if (pos.Contains("Noun")) { pos_index = 0; pos_counters[pos_index] = pos_counters[pos_index] + 1; }
+                            else if (pos.Contains("Verb")) { pos_index = 1; pos_counters[pos_index] = pos_counters[pos_index] + 1; }
+                            else if (pos.Contains("Adverb")) { pos_index = 2; pos_counters[pos_index] = pos_counters[pos_index] + 1; }
+                            else if (pos.Contains("Adjective")) { pos_index = 3; pos_counters[pos_index] = pos_counters[pos_index] + 1; }
+                            else if (pos.Contains("Conjunction")) { pos_index = 4; pos_counters[pos_index] = pos_counters[pos_index] + 1; }
+                            else if (pos.Contains("Preposition")) { pos_index = 5; pos_counters[pos_index] = pos_counters[pos_index] + 1; }
+                            else if (pos.Contains("Interjection")) { pos_index = 6; pos_counters[pos_index] = pos_counters[pos_index] + 1; }
+                            else if (pos.Contains("Particle")) { pos_index = 7; pos_counters[pos_index] = pos_counters[pos_index] + 1; }
+                            else if (pos.Contains("Determiner")) { pos_index = 8; pos_counters[pos_index] = pos_counters[pos_index] + 1; }
+                            else if (pos.Contains("Pronoun")) { pos_index = 9; pos_counters[pos_index] = pos_counters[pos_index] + 1; }
+                            else if (pos.Contains("Participle")) { pos_index = 10; pos_counters[pos_index] = pos_counters[pos_index] + 1; }
+                            else if (pos.Contains("Postposition")) { pos_index = 11; pos_counters[pos_index] = pos_counters[pos_index] + 1; }
+                            else if (pos.Contains("Letter")) { pos_index = 12; pos_counters[pos_index] = pos_counters[pos_index] + 1; }
+                            else if (pos.Contains("Predicative")) { pos_index = 13; pos_counters[pos_index] = pos_counters[pos_index] + 1; }
+                            else if (pos.Contains("Prefix")) { pos_index = 14; pos_counters[pos_index] = pos_counters[pos_index] + 1; }
+                            else if (pos.Contains("Numeral")) { pos_index = 15; pos_counters[pos_index] = pos_counters[pos_index] + 1; }
+                            else if (pos.Contains("Article")) { pos_index = 16; pos_counters[pos_index] = pos_counters[pos_index] + 1; }
+                            else if (pos.Contains("Contraction")) { pos_index = 17; pos_counters[pos_index] = pos_counters[pos_index] + 1; }
+                        }
+
+                        if (element.Name == "ol")
+                        {
+                            List<string> definition_array = [];
+
+                            HtmlNode element_child = element.FirstElementChild();
+                            while(element_child != null)
+                            {
+                                string def = "";
+                                
+                                foreach(HtmlNode node in element_child.ChildNodes)
+                                {
+                                    if (node.Name == "dl" || node.HasClass("nyms-toggle") || node.Name == "ul" || node.HasClass("HQToggle") || node.Name == "ol") {; }
+                                    else if(node.HasClass("use-with-mention"))
+                                    {
+                                        def += "[" + node.InnerText + "]";
+                                    }
+                                    else
+                                    {
+                                        def += node.InnerText;
+                                    }
+                                }
+                                def = def.Trim();
+                                if(def != "") definition_array.Add(def);
+                                element_child = element_child.NextElementSibling();
+                            }
+                            if(!wiki_results.TryAdd(pos, definition_array))
+                            {
+                                wiki_results.Add(pos + pos_counters[pos_index].ToString(), definition_array);
+                            }
+                        }
+
+                    }
+                    else
+                    {
+                        langFlag = false;
+                    }
+                    element = element.NextElementSibling();                   
+                }
+                foreach(KeyValuePair<string, List<string>> wiki_result in wiki_results)
+                { FormattedString header_text = new();
+                    header_text.Spans.Add(new Span { Text = wiki_result.Key, FontFamily = "IBMPlexSans", TextColor = Color.FromRgba("#cbd9f4"), FontAttributes = FontAttributes.Bold, FontSize = 16 });
+                    dict_results.Add(new DictResult(false, true, "", "", header_text));
+                    for(int i = 0; i < wiki_result.Value.Count; i++)
+                    {
+                        dict_results.Add(new DictResult((i % 2 == 0), false, wiki_result.Value[i]));
+                    }
+                }
+
+            }
+        }
+
         private List<DictResult> dict_results = new();
 
-        public void UrlMaker(int lang_id, int _dict_index, string dict_query)
+        public void UrlMaker(/*int lang_id,*/ /*int _dict_index,*/ string dict_query)
         {
-            dict_index = _dict_index;
-            string url_base = dict_urls[dict_index];
-            if(dict_index == 0)
+            //dict_index = _dict_index;
+            string url_base = dict_urls[DictIndex];
+            if(DictIndex == 0)
             {
                 string PONS_lang = "";
-                switch(lang_id)
+                switch(LangId)
                 {
                     case 1:
                         PONS_lang = "russisch-";
@@ -392,15 +471,19 @@ namespace OmniDictionary
                         PONS_lang = "d%C3%A4nisch-";
                         break;
                 }
-                if (lang_id == 5) PONS_lang += "englisch/";
+                if (LangId == 5) PONS_lang += "englisch/";
                 else PONS_lang += "deutsch/";
 
                 url = url_base + PONS_lang + Uri.EscapeDataString(dict_query);
                 return;
             }
-            else if(dict_index == 3)
+            else if(DictIndex == 3)
             {
                 url = "https://www.dict.cc/?s=" + Uri.EscapeDataString(dict_query);
+            }
+            else if(DictIndex == 1)
+            {
+                url = "https://en.wiktionary.org/wiki/" + Uri.EscapeDataString(dict_query);
             }
         }
 
@@ -411,10 +494,13 @@ namespace OmniDictionary
         {   dict_results = new();
             html = await GetHTMLAsync();
             
-            switch(dict_index)
+            switch(DictIndex)
             {
                 case 0:
                     ParsePONS();
+                    break;
+                case 1:
+                    ParseWiktionary();
                     break;
                 case 3:
                     ParseDictCC();

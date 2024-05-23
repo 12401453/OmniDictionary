@@ -67,5 +67,25 @@ namespace OmniDictionary
         {
             return HttpUtility.HtmlDecode(input);
         }
+
+        public static HtmlNode? NextElementSibling(this HtmlNode node)
+        {
+            HtmlNode next_sibling_node = node.NextSibling;
+            while(next_sibling_node != null && next_sibling_node.NodeType != HtmlNodeType.Element)
+            {
+                next_sibling_node= next_sibling_node.NextSibling;
+            }
+            return next_sibling_node;
+        }
+
+        public static HtmlNode? FirstElementChild(this HtmlNode node)
+        {
+            HtmlNode first_child = node.FirstChild;
+            while (first_child != null && first_child.NodeType != HtmlNodeType.Element)
+            {
+                first_child = first_child.NextSibling;
+            }
+            return first_child;
+        }
     }
 }
