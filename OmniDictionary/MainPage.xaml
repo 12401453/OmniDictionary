@@ -102,9 +102,10 @@
 
         <Border x:Name="searchBoxBorder" Grid.Row="1" Grid.ColumnSpan="3" Style="{AppThemeBinding Light={StaticResource dictSearchbarBorder}, Dark={StaticResource dictSearchbarBorder}}">
             <SearchBar x:Name="searchBox"  Style="{AppThemeBinding Light={StaticResource dictSearchbar}, Dark={StaticResource dictSearchbar}}"
-                   Placeholder="Search..."
+                   Placeholder="{Binding SearchBoxPlaceholder}"
                    IsTextPredictionEnabled="False"
                    IsSpellCheckEnabled="False"
+                   IsEnabled="{Binding SearchBoxEnabled}"
                    SearchCommand="{Binding PerformSearch}"
                    SearchCommandParameter="{Binding Text, Source={x:Reference searchBox}}"/>
         </Border>

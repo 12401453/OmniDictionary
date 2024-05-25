@@ -27,6 +27,7 @@ namespace OmniDictionary
 
         private async Task<string> GetHTMLAsync()
         {
+            
             try { return await httpClient.GetStringAsync(url); }
             catch (HttpRequestException)
             {
@@ -84,10 +85,15 @@ namespace OmniDictionary
                     {
                         txt += "<i>unverified</i>";
                     }
+                    else if (child.Name == "sup")
+                    {
+                        txt += "[<i>" + child.InnerText + "</i>]"; //for the Dat. or Akk. superscripts indicating the case of 'sich' and such
+                    }
                     else if(child.Name != "dfn" &&  child.Name != "div")
                     {
                         txt += child.InnerText;
                     }
+                    
                 }
                 return txt.Trim();
             }
@@ -178,7 +184,7 @@ namespace OmniDictionary
                         text += "<i>" + node.InnerText + "</i>";
                         header_span_aux.Text = node.InnerText.NormaliseWhitespace().HtmlDecode();
                         //formatted_text.Spans.Add(header_span_aux);
-                        formatted_text.Spans.Add(new Span { Text = node.InnerText.NormaliseWhitespace().HtmlDecode(), FontFamily = "IBMPlexSans", TextColor = Color.FromRgba("#cbd9f4"), FontSize = 14 });
+                        formatted_text.Spans.Add(new Span { Text = node.InnerText.NormaliseWhitespace().HtmlDecode(), FontFamily = "IBMPlexSans", TextColor = Color.FromRgba("#e6e6e6"), FontSize = 14 });
                     }
                     else if(node.NodeType == HtmlNodeType.Element && node.Name == "span" && node.HasClass("headword_attributes"))
                     {
@@ -219,10 +225,9 @@ namespace OmniDictionary
             {
                 FormattedString formatted_text = new FormattedString();
 
-                //if (node_list.Count < 2) return ""; //sometimes the <h3> nodes can be just plain text so get skipped, but in these cases nothing interesting is said anyway
                 if (node_list.Count < 2) {
                     //return node_list[0].InnerText.Trim().NormaliseWhitespace();
-                    formatted_text.Spans.Add(new Span { Text = node_list[0].InnerText.Trim().NormaliseWhitespace().HtmlDecode(), FontFamily = "IBMPlexSans", TextColor = Color.FromRgba("#cbd9f4"), FontSize = 14 });
+                    if(node_list.Count > 0) formatted_text.Spans.Add(new Span { Text = node_list[0].InnerText.Trim().NormaliseWhitespace().HtmlDecode(), FontFamily = "IBMPlexSans", TextColor = Color.FromRgba("#e6e6e6"), FontSize = 14 });
                     return formatted_text;
                 }
                 string text = "";
@@ -236,7 +241,7 @@ namespace OmniDictionary
                     else
                     {
                         text += node.InnerText.Trim() + " ";
-                        formatted_text.Spans.Add(new Span { Text = node.InnerText.Trim().NormaliseWhitespace().HtmlDecode() + " ", FontFamily = "IBMPlexSans", TextColor = Color.FromRgba("#cbd9f4"), FontSize = 14 });
+                        formatted_text.Spans.Add(new Span { Text = node.InnerText.Trim().NormaliseWhitespace().HtmlDecode() + " ", FontFamily = "IBMPlexSans", TextColor = Color.FromRgba("#e6e6e6"), FontSize = 14 });
                     }
                 }
                 //return text;
@@ -247,14 +252,74 @@ namespace OmniDictionary
             doc.LoadHtml(html);
             var PONS_page = doc.DocumentNode;
 
-            HtmlNodeCollection meaning_sections = PONS_page.GetElementsByClassName("rom"); //the XPath "*[@class=\'rom\']" fails if multiple classes are assigned as in this case; the fact that HtmlAgilityPack doesn't by default replicate exactly the functionality of the JS querySelectors is pretty stupid
+            if(LangId == 4)
+            {
+                HtmlNodeCollection results_sections = PONS_page.GetElementsByClassName("results");
+                if(results_sections.Count == 0)
+                {
+                    NoResultsFound();
+                    return;
+                }
+                HtmlNodeCollection entry_sections = results_sections[0].GetElementsByClassName("entry");
+                for(int i = 0; i < entry_sections.Count; i++)
+                {
+                    dict_results.Add(new DictResult(false, true, "", "", extractHeaderText(entry_sections[i].SelectSingleNode(".//h2").ChildNodes)));
+
+                    HtmlNodeCollection translations = entry_sections[i].GetElementsByClassName("translations");
+                    for(int j = 0; j < translations.Count; j++)
+                    {
+                        if (translations[j].SelectSingleNode(".//h3").InnerText.Trim() == "Wendungen:")
+                        {
+                            dict_results.Add(new DictResult(false, true, "Wendungen", ""));
+
+                            HtmlNodeCollection entries_left = translations[j].SelectNodesOrEmpty(".//*[@class=\'dt-inner\']/*[@class=\'source\']");
+                            HtmlNodeCollection entries_right = translations[j].SelectNodesOrEmpty(".//*[@class=\'dd-inner\']/*[@class=\'target\']");
+
+                            for(int k = 0; k < entries_left.Count; k++)
+                            {
+                                dict_results.Add(new DictResult((k % 2 == 0), false, extractText(entries_left[k].ChildNodes), extractText(entries_right[k].ChildNodes)));
+                            }
+                        }
+                        else
+                        {
+                            var formatted_h3_text = extractH3Text(translations[j].SelectSingleNode(".//h3").ChildNodes);
+                            if(formatted_h3_text.ToString() != "") dict_results.Add(new DictResult(false, true, "", "", formatted_h3_text));
+
+                            HtmlNodeCollection entries_left = translations[j].SelectNodesOrEmpty(".//*[@class=\'dt-inner\']/*[@class=\'source\']");
+                            HtmlNodeCollection entries_right = translations[j].SelectNodesOrEmpty(".//*[@class=\'dd-inner\']/*[@class=\'target\']");
+
+                            for (int k = 0; k < entries_left.Count; k++)
+                            {
+                                dict_results.Add(new DictResult((k % 2 == 0), false, extractText(entries_left[k].ChildNodes), extractText(entries_right[k].ChildNodes)));
+                            }
+                        }
+                    }
+                }
+                if(entry_sections.Count == 0)
+                {
+                    HtmlNodeCollection dl_sections = results_sections[0].SelectNodesOrEmpty(".//dl");
+                    for(int i = 0; i < dl_sections.Count; i++)
+                    {
+                        HtmlNodeCollection entries_left = dl_sections[i].SelectNodesOrEmpty(".//*[@class=\'dt-inner\']/*[@class=\'source\']");
+                        HtmlNodeCollection entries_right = dl_sections[i].SelectNodesOrEmpty(".//*[@class=\'dd-inner\']/*[@class=\'target\']");
+
+                        for (int j = 0; j < entries_left.Count; j++)
+                        {
+                            dict_results.Add(new DictResult((j % 2 == 0), false, extractText(entries_left[j].ChildNodes), extractText(entries_right[j].ChildNodes)));
+                        }
+                    }
+                }
+                return;
+            }
+
+            HtmlNodeCollection meaning_sections = PONS_page.GetElementsByClassName("rom");
             int rom_lngth = meaning_sections.Count;
 
             //this is for when PONS probably doesn't have an exact entry for the word but does have the word included in other example sentences/entries
             if(rom_lngth == 0)
             {
                 HtmlNodeCollection results_sections = PONS_page.GetElementsByClassName("results");//SelectNodes("//*[contains(concat(' ', normalize-space(@class), ' '), ' results ')]");
-                if(results_sections.Count == 0) 
+                if(results_sections.Count == 0 || (results_sections.Count == 1 && results_sections[0].ParentNode.HasClass("catalog-browse"))) 
                 {
                     NoResultsFound();
                     return;
@@ -391,7 +456,7 @@ namespace OmniDictionary
                         {
                             List<string> definition_array = [];
 
-                            HtmlNode element_child = element.FirstElementChild();
+                            HtmlNode? element_child = element.FirstElementChild();
                             while(element_child != null)
                             {
                                 string def = "";

@@ -20,6 +20,8 @@ namespace OmniDictionary
 #if DEBUG
     		builder.Logging.AddDebug();
 #endif
+            builder.Services.AddSingleton<IConnectivity>(Connectivity.Current);
+
 
             return builder.Build();
         }

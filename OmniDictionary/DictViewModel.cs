@@ -1,6 +1,7 @@
 ﻿//using CommunityToolkit.Mvvm.ComponentModel;
 
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Windows.Input;
 
 namespace OmniDictionary
@@ -32,23 +33,47 @@ namespace OmniDictionary
             {8, [0, 1, 3] },
             {10, [4, 1] }
         };
-
-        int _lang_id = 5;
-        string _name = "German";
-        List<string> _allowable_dicts = ["dict.cc", "PONS.com", "Wiktionary"];
-
-        List<string> language_names = new();
-        public string Name
+    
+        /* -----------------------------------------------------------------------------------------------------------------------------------------*/
+        //This entire section only exists so that I can access the value of the IsEnabled property of the searchbox element from within this class, which is only necessary because the IsEnabled property doesn't work right on Android and thus I can't rely just on disabling the searchbox directly with an event-handler in the MainPage.xaml.cs file (because on Android you can still submit searches on an IsEnabled=false SearchBox, because MAUI controls are half-baked crap that don't correctly map to their native equivalents)
+        public DictViewModel()
         {
-            get => _name;
+            Connectivity.ConnectivityChanged += Connectivity_ConnectivityChanged;
         }
+        private void Connectivity_ConnectivityChanged(object? sender, ConnectivityChangedEventArgs e)
+        {
+            SearchBoxEnabled = (e.NetworkAccess == NetworkAccess.Internet);
+            SearchBoxPlaceholder = SearchBoxEnabled ? "Search..." : "No internet - search unavailable";
+        }
+
+        private bool _searchBoxEnabled = (Connectivity.Current.NetworkAccess == NetworkAccess.Internet);
+        public bool SearchBoxEnabled {
+            get => _searchBoxEnabled;
+            set 
+            {
+                _searchBoxEnabled = value;
+                OnPropertyChanged(nameof(SearchBoxEnabled));
+            } 
+        }
+        private string _searchBoxPlaceholder = (Connectivity.Current.NetworkAccess == NetworkAccess.Internet) ? "Search..." : "No internet - search unavailable";
+        public string SearchBoxPlaceholder
+        {
+            get => _searchBoxPlaceholder;
+            set
+            {
+                _searchBoxPlaceholder = value;
+                OnPropertyChanged(nameof(SearchBoxPlaceholder));
+            }
+        }
+        /* -----------------------------------------------------------------------------------------------------------------------------------------*/
+
 
         public List<string> LanguageNames
         {
             get => languages.Values.ToList();
         }
 
-        static List<Language> _langs = new List<Language>() {
+        static readonly List<Language> _langs = new List<Language>() {
             new Language(1, "Russian", ["Wiktionary", "PONS.com"], ["enwiktionary_grey.png", "pons.png"]),
             new Language(2, "Kazakh", ["sozdik.kz", "Wiktionary"], ["sozdik.png", "enwiktionary_grey.png"]),    
             new Language(3, "Polish", ["PONS.com", "Wiktionary"], ["pons.png", "enwiktionary_grey.png"]),
@@ -123,7 +148,7 @@ namespace OmniDictionary
             }
         }
 
-        List<DictResult> dict_results = new List<DictResult>() /*{ new DictResult(false, true, "<b>прицѐлвам се , прицѐля се</b> perf VERB intr", ""), new DictResult(true, false, "прицелвам се", "zielen"), new DictResult(false, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(true, false, "прицелвам се", "zielen"), new DictResult(false, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(true, false, "прицелвам се", "zielen"), new DictResult(false, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(true, false, "прицелвам се", "zielen"), new DictResult(false, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(true, false, "прицелвам се", "zielen"), new DictResult(false, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(true, false, "прицелвам се", "zielen"), new DictResult(false, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(true, false, "прицелвам се", "zielen"), new DictResult(false, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(true, false, "прицелвам се", "zielen"), new DictResult(true, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(false, false, "прицелвам се", "zielen"), new DictResult(true, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(false, false, "прицелвам се", "zielen"), new DictResult(true, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(false, false, "прицелвам се", "zielen"), new DictResult(false, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(true, false, "прицелвам се", "zielen"), new DictResult(false, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(true, false, "прицелвам се", "zielen"), new DictResult(false, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen"), new DictResult(true, false, "прицелвам се", "zielen"), new DictResult(false, false, "прицелвам се в нкг/нщ", "auf jdn/etw zielen")} */;
+        List<DictResult> dict_results = new List<DictResult>();
         public List<DictResult> Results
         { 
             get => dict_results; 
@@ -134,11 +159,13 @@ namespace OmniDictionary
         }
 
         private DictScraper dictScraper = new();
-        public ICommand PerformSearch => new Command<string>(async (string dictQuery) => await FetchDictResultsAsync(dictQuery));
+        public ICommand PerformSearch => new Command<string>(async (string dictQuery) => { 
+            if(dictQuery.Trim() != string.Empty && SearchBoxEnabled) await FetchDictResultsAsync(dictQuery.Trim()); 
+        });
 
         private async Task FetchDictResultsAsync(string dict_query)
         {
-            dictScraper.UrlMaker(/*SelectedLanguage.LangId, */ /*allowable_dict_list[SelectedLanguage.LangId][SelectedDictIndex],*/ dict_query);
+            dictScraper.UrlMaker(dict_query);
             Results = new List<DictResult>() { new DictResult(false, false, "Performing query...", "")};
             Results = await dictScraper.GetDictResultsAsync();
         }
@@ -148,7 +175,6 @@ namespace OmniDictionary
         { 
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
-
 
         
     }
