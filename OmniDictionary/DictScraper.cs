@@ -233,7 +233,7 @@ namespace OmniDictionary
                 string text = "";
                 foreach( HtmlNode node in node_list)
                 {
-                    if(node.MatchesAnyClass(["info", "style"]))
+                    if(node.MatchesAnyClass(["info", "style", "reflection"]))
                     {
                         text += "<abbr>" + node.InnerText.Trim() + "</abbr> "; //convert to FormattedString and make the text greyer to match the website
                         formatted_text.Spans.Add(new Span { Text = node.InnerText.Trim().NormaliseWhitespace().HtmlDecode(), FontFamily = "IBMPlexSans", TextColor = Color.FromRgba("#cbd9f4be"), FontSize = 14, FontAttributes = FontAttributes.Italic });
@@ -263,11 +263,18 @@ namespace OmniDictionary
                 HtmlNodeCollection entry_sections = results_sections[0].GetElementsByClassName("entry");
                 for(int i = 0; i < entry_sections.Count; i++)
                 {
-                    dict_results.Add(new DictResult(false, true, "", "", extractHeaderText(entry_sections[i].SelectSingleNode(".//h2").ChildNodes)));
+                    //dict_results.Add(new DictResult(false, true, "", "", extractHeaderText(entry_sections[i].SelectSingleNode(".//h2").ChildNodes)));
 
                     HtmlNodeCollection translations = entry_sections[i].GetElementsByClassName("translations");
                     for(int j = 0; j < translations.Count; j++)
                     {
+                        HtmlNode? previous_sibling = translations[j].PreviousSibling;
+                        if(previous_sibling != null && previous_sibling.HasClass("rom"))
+                        {
+                            HtmlNode? h2_header_node = previous_sibling.SelectSingleNode(".//h2");
+                            if(h2_header_node != null) dict_results.Add(new DictResult(false, true, "", "", extractHeaderText(h2_header_node.ChildNodes)));
+                        }
+
                         if (translations[j].SelectSingleNode(".//h3").InnerText.Trim() == "Wendungen:")
                         {
                             dict_results.Add(new DictResult(false, true, "Wendungen", ""));
