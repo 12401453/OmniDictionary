@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<?xaml-comp compile="true" ?>
+<ResourceDictionary 
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <x:String x:Key="SozdikCookies">sid=1er7pig8jsm0vdjdq1b3vr7f11; device_language_interface=ru; sozdik_token=%2FWvaionWpOIu%2FuWDh%2BKToTrZR6Bq6fbieuqDIiJBW%2BfkhfvcKiZFr8JdT8BuoU4%2BGzt2BbSXvikCa48QSzedxHwNnbBjT%2FweRijSjrBBL%2BgN26LOliXS8AP76TXyrHYog2GhHnkpM13uFi4AtZ%2FeRVhuubn5xFhPJ03JaQqa%2BrbhqaDN2Vbnn8r4JCJpnjoDlX29%2FOCC8INLXA2wq%2F3llQ%2FU%2BJVg7C1dZ7Efby6XWoYmCV5T2Ufi1bO5u0f80s6JmMJegAz%2FUU1UZmmytGN%2Feur%2FDg%3D%3D; device_virtual_keyboard=1; auth_token=9XhalLz93Tjd5Uog2O3AaDx67Tj1MDbAuoxuu0A4zaZD13iOggHrDDxRj1i6wTD0fU%2B8%2FPpy1lxxZtVV0RRtzQM%2FavTWtQ%3D%3D; dictionary_translate_direction=kk_ru; device_color_scheme=light</x:String>
+
+</ResourceDictionary>

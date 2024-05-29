@@ -8,19 +8,6 @@ namespace OmniDictionary
 {
     public partial class DictViewModel : INotifyPropertyChanged/* : ObservableObject */
     {  
-        public static readonly Dictionary<int, string> languages = new()
-	    {
-		    {1, "Russian"},
-		    {2, "Kazakh"},
-		    {3, "Polish"},
-		    {4, "Bulgarian"},
-		    {5, "German"},
-		    {6, "Swedish"},
-		    {7, "Turkish"},
-		    {8, "Danish"},
-		    {10, "Old English"}
-	    };
-
         static readonly Dictionary<int, int[]> allowable_dict_list = new()
         {
             {1, [1, 0] },
@@ -67,12 +54,6 @@ namespace OmniDictionary
         }
         /* -----------------------------------------------------------------------------------------------------------------------------------------*/
 
-
-        public List<string> LanguageNames
-        {
-            get => languages.Values.ToList();
-        }
-
         static readonly List<Language> _langs = new List<Language>() {
             new Language(1, "Russian", ["Wiktionary", "PONS.com"], ["enwiktionary_grey.png", "pons.png"]),
             new Language(2, "Kazakh", ["sozdik.kz", "Wiktionary"], ["sozdik.png", "enwiktionary_grey.png"]),    
@@ -82,7 +63,7 @@ namespace OmniDictionary
             new Language(6, "Swedish", ["PONS.com", "Wiktionary"], ["pons.png", "enwiktionary_grey.png"]),
             new Language(7, "Turkish", ["PONS.com", "Wiktionary"], ["pons.png", "enwiktionary_grey.png"]),
             new Language(8, "Danish", ["PONS.com", "Wiktionary"], ["pons.png", "enwiktionary_grey.png"]),
-            new Language(10, "Old English", ["Mitchell&Robinson Glossary", "Wiktionary"], ["mr_glossary.jpg", "enwiktionary_grey.png"])
+            //new Language(10, "Old English", ["Mitchell&Robinson Glossary", "Wiktionary"], ["mr_glossary.jpg", "enwiktionary_grey.png"])
         };
 
         public List<Language> Langs { get => _langs; }

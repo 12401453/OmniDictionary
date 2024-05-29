@@ -13,11 +13,8 @@ namespace OmniDictionary
         protected override DataTemplate OnSelectTemplate(object item, BindableObject container)
         {
             if (((DictResult)item).Header_Text != null) return DictHeaderFormattedStringTemplate;
-            else if (((DictResult)item).Header) { return DictHeaderTemplate; }
-            else if (((DictResult)item).Column2 == string.Empty)
-            {
-                return ((DictResult)item).EvenNumber ? DictResultSingleEvenTemplate : DictResultSingleOddTemplate;
-            }
+            else if (((DictResult)item).Header) return DictHeaderTemplate;
+            else if (((DictResult)item).Column2 == string.Empty)  return ((DictResult)item).EvenNumber ? DictResultSingleEvenTemplate : DictResultSingleOddTemplate;
             else return ((DictResult)item).EvenNumber ? DictResultDoubleEvenTemplate : DictResultDoubleOddTemplate;
   
         }

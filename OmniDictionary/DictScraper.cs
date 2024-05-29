@@ -1,16 +1,18 @@
 ﻿using HtmlAgilityPack;
 using System.Net;
+using System.Text.Json;
 
 namespace OmniDictionary
 {
     public class DictScraper
     {
-        private static readonly HttpClient httpClient = new();
+        private HttpClient httpClient = new();
+        private readonly string kaz_cookies = string.Empty;
+
         static readonly List<string> dict_urls = ["https://de.pons.com/%C3%BCbersetzung/", "https://en.wiktionary.org/wiki/", "https://sozdik.kz/translate/kk/ru/", "https://www.dict.cc/?s=", "MR_glossary.url"];
 
         private string html = "";
         private string url = "";
-        //private int dict_index = 3;
         public string LangName { get; set; } = "German";
         public int LangId { get; set; } = 5;
         public int DictIndex { get; set; } = 3;
@@ -20,15 +22,38 @@ namespace OmniDictionary
         private Span header_span_main = new Span { Text = "", FontFamily = "IBMPlexSans", TextColor = Color.FromRgba("#cbd9f4"), FontAttributes = FontAttributes.Bold, FontSize = 16 };
         private Span header_span_aux = new Span { Text = "", FontFamily = "IBMPlexSans", TextColor = Color.FromRgba("#cbd9f4"), FontSize = 14 };
 
+        private async Task<string> ReadSozdikCookiesFile()
+        {
+            using Stream fileStream = await FileSystem.Current.OpenAppPackageFileAsync("kaz_cookies.txt");
+            using StreamReader reader = new StreamReader(fileStream);
+
+            return await reader.ReadLineAsync() ?? string.Empty; //the cookies have to be on a single line anyway
+        }
+
+        private void remakeHttpClient()
+        {
+            httpClient.Dispose();
+            httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
+            httpClient.DefaultRequestHeaders.Add("Cookie", kaz_cookies);
+        }
+
         public DictScraper()
         {
             httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36");
+            kaz_cookies = Application.Current.Resources["SozdikCookies"].ToString() ?? string.Empty;
+
+            httpClient.DefaultRequestHeaders.Add("Cookie", kaz_cookies);
         }
+    
 
         private async Task<string> GetHTMLAsync()
         {
             
-            try { return await httpClient.GetStringAsync(url); }
+            try 
+            {
+                return await httpClient.GetStringAsync(url);
+            }
             catch (HttpRequestException)
             {
                 return "404 not found";
@@ -129,7 +154,6 @@ namespace OmniDictionary
             }
             if(result_count == 0)
             {
-                //dict_results.Add(new DictResult(false, true, "No results found", ""));
                 NoResultsFound();
                 return;
             }
@@ -188,8 +212,7 @@ namespace OmniDictionary
                     }
                     else if(node.NodeType == HtmlNodeType.Element && node.Name == "span" && node.HasClass("headword_attributes"))
                     {
-                        text += node.InnerText; //this block is to get the title= attribute to show HTML title tooltip for certain headwords, but I doubt it will work in MAUI and it is doubtful to be worth implementing a proper tooltip for it so really this whole block is unneccessary
-                        //header_span_main.Text = node.InnerText.NormaliseWhitespace();
+                        text += node.InnerText;
                         formatted_text.Spans.Add(new Span { Text = node.InnerText.NormaliseWhitespace().HtmlDecode(), FontFamily = "IBMPlexSans", TextColor = Color.FromRgba("#cbd9f4"), FontAttributes = FontAttributes.Bold, FontSize = 16 });
                     }
                     else if(node.HasClass("headword"))
@@ -252,7 +275,7 @@ namespace OmniDictionary
             doc.LoadHtml(html);
             var PONS_page = doc.DocumentNode;
 
-            if(LangId == 4)
+            if(LangId == 4) //for Bulgarian which has a completely different page-structure for some reason
             {
                 HtmlNodeCollection results_sections = PONS_page.GetElementsByClassName("results");
                 if(results_sections.Count == 0)
@@ -510,6 +533,99 @@ namespace OmniDictionary
             }
         }
 
+        private void ParseSozdik()
+        {
+            FormattedString sozdikHeaderExtractor(HtmlNode details_elem)
+            {
+                FormattedString summary_text = new FormattedString();
+                HtmlNodeCollection child_nodes = details_elem.SelectSingleNode(".//summary").ChildNodes;
+                foreach (HtmlNode child_node in child_nodes)
+                {
+                    if (child_node.Name == "a") summary_text.Spans.Add(new Span { Text = child_node.InnerText.HtmlDecode(), FontFamily = "IBMPlexSans", TextColor = Colors.Cyan, FontAttributes = FontAttributes.Bold, FontSize = 16 });
+                    else if (child_node.Name == "abbr") summary_text.Spans.Add(new Span { Text = child_node.InnerText.HtmlDecode(), FontFamily = "IBMPlexSans", TextColor = Color.FromRgba("#cbd9f4be"), FontAttributes = FontAttributes.Italic, FontSize = 15 });
+                    else if (child_node.Name == "em") summary_text.Spans.Add(new Span { Text = child_node.InnerText.HtmlDecode(), FontFamily = "IBMPlexSans", TextColor = Color.FromRgba("#cbd9f4be"), FontAttributes = FontAttributes.Italic, FontSize = 16 });
+                    else summary_text.Spans.Add(new Span { Text = child_node.InnerText.HtmlDecode(), FontFamily = "IBMPlexSans", TextColor = Color.FromRgba("#cbd9f4"), FontAttributes = FontAttributes.Bold, FontSize = 16 }); //the JS version just takes the .outerHTML in the last default option in order to get the <em> tags which boldify and italicise the text
+                }
+                return summary_text;
+            }
+
+            void sozdikEntryExtractor(HtmlNode p, int i)
+            {
+                string[] entries = p.InnerHtml.Split("→");
+                //hopefully most of the html tags will just get ignored by MAUI but there is still likely to be some string.replace()ing necessary, esp. to turn <abbr> tags into <i> or such like
+
+                dict_results.Add(new DictResult((i % 2 == 0), false, entries[0].Trim().Replace("<abbr", "<i").Replace("</abbr>", "</i>"), entries[1].Trim().Replace("<abbr", "<i").Replace("</abbr>", "</i>")));
+            }
+
+            HtmlDocument sozdik_doc = new HtmlDocument();
+            SozdikJSONResult sozdikJSONResult = JsonSerializer.Deserialize<SozdikJSONResult>(html);
+            if(sozdikJSONResult.message == "Human check required")
+            {
+                NoResultsFound("sozdik.kz authentication has failed");
+                return;
+            }
+            if(sozdikJSONResult.message == "No data" || sozdikJSONResult.data.translation == "")
+            {
+                NoResultsFound();
+                return;
+            }
+            sozdik_doc.LoadHtml(sozdikJSONResult.data.translation);
+            HtmlNode sozdik_translations_node = sozdik_doc.DocumentNode;
+
+            foreach(HtmlNode details_elem in sozdik_translations_node.SelectNodesOrEmpty("/details"))
+            {
+                dict_results.Add(new DictResult(false, true, "", "", sozdikHeaderExtractor(details_elem)));
+
+                HtmlNodeCollection p_elems = details_elem.SelectNodesOrEmpty("./p");
+                for(int i = 0; i < p_elems.Count; i++)
+                {
+                    sozdikEntryExtractor(p_elems[i], i);
+                }
+
+                foreach(HtmlNode details_elem_2 in details_elem.SelectNodesOrEmpty("./details"))
+                {
+                    dict_results.Add(new DictResult(false, true, "", "", sozdikHeaderExtractor(details_elem_2)));
+
+                    HtmlNodeCollection p_elems_2 = details_elem_2.SelectNodesOrEmpty("./p");
+                    for (int j = 0; j < p_elems_2.Count; j++)
+                    {
+                        sozdikEntryExtractor(p_elems_2[j], j);
+                    }
+
+                    /* this third-level has only existed due to error on the website's part so far */
+                    foreach(HtmlNode details_elem_3 in details_elem_2.SelectNodesOrEmpty("./details"))
+                    {
+                        dict_results.Add(new DictResult(false, true, "", "", sozdikHeaderExtractor(details_elem_3)));
+
+                        HtmlNodeCollection p_elems_3 = details_elem_3.SelectNodesOrEmpty("./p");
+                        for (int k = 0; k < p_elems_3.Count; k++)
+                        {
+                            sozdikEntryExtractor(p_elems_3[k], k);
+                        }
+                    }
+                    /*______________________________________________________________________________*/
+                }
+            }
+
+            if(dict_results.Count == 0)
+            {
+                HtmlNodeCollection p_nodes = sozdik_translations_node.SelectNodesOrEmpty("//p");
+                for(int i = 0; i < p_nodes.Count; i++)
+                {
+                    string sozdik_raw_entry = "";
+                    foreach(HtmlNode child_node in p_nodes[i].ChildNodes)
+                    {
+                        if(child_node.Name == "abbr" || child_node.Name == "em") sozdik_raw_entry += "<i>" + child_node.InnerText + "</i>";
+                        else sozdik_raw_entry += child_node.InnerText;
+                        
+                    }
+                    dict_results.Add(new DictResult((i % 2 == 0), false, sozdik_raw_entry));
+
+                }
+            }
+           
+        }
+
         private List<DictResult> dict_results = new();
 
         public void UrlMaker(/*int lang_id,*/ /*int _dict_index,*/ string dict_query)
@@ -557,6 +673,10 @@ namespace OmniDictionary
             {
                 url = "https://en.wiktionary.org/wiki/" + Uri.EscapeDataString(dict_query);
             }
+            else if(DictIndex == 2)
+            {
+                url = dict_urls[DictIndex] + Uri.EscapeDataString(dict_query) + "/";
+            }
         }
 
       
@@ -564,6 +684,7 @@ namespace OmniDictionary
 
         public async Task<List<DictResult>> GetDictResultsAsync()
         {   dict_results = new();
+            if (LangId == 2) remakeHttpClient(); //I don't know why this is necessary but sozdik.kz gives me a "Translations limit exceeded" error if I try to make more than one request with the same HttpClient on Android
             html = await GetHTMLAsync();
             
             switch(DictIndex)
@@ -573,6 +694,9 @@ namespace OmniDictionary
                     break;
                 case 1:
                     ParseWiktionary();
+                    break;
+                case 2:
+                    ParseSozdik();
                     break;
                 case 3:
                     ParseDictCC();

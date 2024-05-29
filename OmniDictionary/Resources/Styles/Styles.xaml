@@ -480,6 +480,7 @@
         <Setter Property="FontFamily" Value="IBMPlexSans"/>
         <Setter Property="TextColor" Value="#cbd9f4"/>
         <Setter Property="TextType" Value="Html" />
+        <Setter Property="LineBreakMode" Value="WordWrap" />
     </Style>
 
     <Style x:Key="dictResultHeaderFrame" TargetType="Frame">
