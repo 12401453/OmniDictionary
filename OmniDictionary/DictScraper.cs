@@ -457,11 +457,13 @@ namespace OmniDictionary
 
                 while(element != null && langFlag) 
                 {
-                    if (element.Name != "h2")
+                    if (element.HasClass("mw-heading2") == false)
                     {
-                        if (element.Name == "h4" || element.Name == "h3")
+                        if ((element.HasClass("mw-heading4") || element.HasClass("mw-heading3")) && element.FirstElementChild() != null && element.FirstElementChild().Name.StartsWith('h'))
                         {
-                            pos = element.SelectSingleNode(".//*[@class=\'mw-headline\']").InnerText;
+                            HtmlNode? pos_element = element.FirstElementChild();
+                            if(pos_element != null) pos = pos_element.InnerText;
+                            
                             if (pos.Contains("Noun")) { pos_index = 0; pos_counters[pos_index] = pos_counters[pos_index] + 1; }
                             else if (pos.Contains("Verb")) { pos_index = 1; pos_counters[pos_index] = pos_counters[pos_index] + 1; }
                             else if (pos.Contains("Adverb")) { pos_index = 2; pos_counters[pos_index] = pos_counters[pos_index] + 1; }

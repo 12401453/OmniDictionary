@@ -68,7 +68,6 @@
 	  <None Remove="Resources\Images\MR_glossary.jpg" />
 	  <None Remove="Resources\Images\PONS.png" />
 	  <None Remove="Resources\Images\sozdik.svg" />
-	  <None Remove="Resources\Raw\kaz_cookies.txt" />
 	</ItemGroup>
 
 	<ItemGroup>
