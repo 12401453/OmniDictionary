@@ -686,7 +686,7 @@ namespace OmniDictionary
 
         public async Task<List<DictResult>> GetDictResultsAsync()
         {   dict_results = new();
-            if (LangId == 2) remakeHttpClient(); //I don't know why this is necessary but sozdik.kz gives me a "Translations limit exceeded" error if I try to make more than one request with the same HttpClient on Android
+            remakeHttpClient(); //I don't know why this is necessary but sozdik.kz gives me a "Translations limit exceeded" error if I try to make more than one request with the same HttpClient on Android. Also PONS.com for some reason started delivering defective HTML on second and subsequent lookups on the same HttpClient
             html = await GetHTMLAsync();
             
             switch(DictIndex)
